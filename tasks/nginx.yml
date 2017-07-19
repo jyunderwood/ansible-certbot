@@ -1,0 +1,26 @@
+- name: make nginx snippets directory
+  file:
+    path: "/etc/nginx/snippets"
+    state: directory
+    owner: root
+    group: root
+
+- name: upload nginx snippet
+  template:
+    src: snippet.nginx.conf
+    dest: "/etc/nginx/snippets/letsencrypt.conf"
+    owner: root
+    group: root
+
+- name: upload new nginx default
+  template:
+    src: default.nginx.conf
+    dest: "/etc/nginx/conf.d/default_server.conf"
+    owner: root
+    group: root
+  when: nginx_replace_default_http_conf
+
+- name: reload nginx
+  service:
+    name: nginx
+    state: reloaded

@@ -1,0 +1,37 @@
+- name: install certbot
+  apt:
+    pkg: letsencrypt
+    state: latest
+
+- name: make webroot directory
+  file:
+    path: "{{ certbot_webroot }}"
+    state: directory
+    owner: nginx
+    group: www-data
+
+- include: nginx.yml
+
+- name: create a cert
+  when:
+    - certbot_domain is defined
+    - certbot_email is defined
+  command: >
+    letsencrypt certonly \
+    --non-interactive --agree-tos --email {{ certbot_email }} \
+    --webroot -w {{ certbot_webroot }} \
+    -d {{ certbot_domain }} -d www.{{ certbot_domain }}
+
+- name: letsencrypt renew at 3:14a central
+  cron:
+    name: "letsencrypt renew"
+    minute: "14"
+    hour: "9,23"
+    job: "/usr/bin/letsencrypt renew --agree-tos"
+
+- name: reload nginx at 3:15a central
+  cron:
+    name: "nginx reload"
+    minute: "15"
+    hour: "9"
+    job: "/usr/sbin/service nginx reload"
